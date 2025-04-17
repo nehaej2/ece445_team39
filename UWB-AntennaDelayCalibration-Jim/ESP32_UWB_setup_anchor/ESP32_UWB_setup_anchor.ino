@@ -11,19 +11,6 @@
 // leftmost two bytes below will become the "short address"
 char anchor_addr[] = "84:00:5B:D5:A9:9A:E2:9C"; //#4
 
-//calibrated Antenna Delay setting for this anchor
-//uint16_t Adelay = 16623; // first calculated antenna delay using slightly skewed calib distance
-uint16_t Adelay = 16589; // second calculated value
-
-// previously determined calibration results for antenna delay
-// #1 16630
-// #2 16610
-// #3 16607
-// #4 16580
-
-// calibration distance
-float dist_m = 1; //meters
-
 #define SPI_SCK 12
 #define SPI_MISO 13
 #define SPI_MOSI 11
@@ -34,20 +21,33 @@ const uint8_t PIN_RST = 5; // reset pin
 const uint8_t PIN_IRQ = 4; // irq pin
 const uint8_t PIN_SS = 9;   // spi select pin
 
+
+//calibrated Antenna Delay setting for this anchor
+
+uint16_t Adelay = 16600; //starting value
+float dist_m = 1.475; // calibration distance meters 
+uint16_t Adelay_delta = 100; //initial binary search step size
+// previously determined calibration results for antenna delay
+// #1 16630
+// #2 16610
+// #3 16607
+// #4 16580
+// #5 16623
+// #6 16589
+// #7 16673
+
 void setup()
 {
   Serial.begin(115200);
-  delay(1000); //wait for serial monitor to connect
-  Serial.println("Anchor config and start");
-  Serial.print("Antenna delay ");
-  Serial.println(Adelay);
-  Serial.print("Calibration distance ");
-  Serial.println(dist_m);
+  while (!Serial); //wait for serial monitor to connect
 
   //init the configuration
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
 
+  Serial.print("Starting Adelay "); Serial.println(Adelay);
+  Serial.print("Measured distance "); Serial.println(dist_m);
+  
   // set antenna delay for anchors only. Tag is default (16384)
   DW1000.setAntennaDelay(Adelay);
 
@@ -71,17 +71,44 @@ void loop()
 
 void newRange()
 {
-  //    Serial.print("from: ");
-  Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
-  Serial.print(", ");
+  static float last_delta = 0.0; //retains values between function calls
 
+  if (Adelay_delta < 3) {
+    // Done Callibrating the Antenna Delay
+    // from here on its only distance calculations
+    // set antenna delay for anchors only. Tag is default (16384)
+    DW1000.setAntennaDelay(Adelay);
+    Serial.print(", final Adelay ");
+    Serial.println(Adelay);
+    Serial.print("from: ");
+    Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), DEC);
+    Serial.print(", ");
+  
 #define NUMBER_OF_DISTANCES 1
-  float dist = 0.0;
-  for (int i = 0; i < NUMBER_OF_DISTANCES; i++) {
-    dist += DW1000Ranging.getDistantDevice()->getRange();
+    float distance = 0.0;
+    for (int i = 0; i < NUMBER_OF_DISTANCES; i++) {
+      distance += DW1000Ranging.getDistantDevice()->getRange();
+    }
+    distance = distance/NUMBER_OF_DISTANCES;
+    Serial.println(distance); 
+  }else{
+    //Continue Antenna Callibration
+    float dist = DW1000Ranging.getDistantDevice()->getRange();
+    Serial.print("distance: ");
+    Serial.print(dist); 
+    
+    float this_delta = dist - dist_m;  //error in measured distance
+  
+    if ( this_delta * last_delta < 0.0) Adelay_delta = Adelay_delta / 2; //sign changed, reduce step size
+    last_delta = this_delta;
+    
+    if (this_delta > 0.0 ) Adelay += Adelay_delta; //new trial Adelay
+    else Adelay -= Adelay_delta;
+  
+    Serial.print(", Adelay = ");
+    Serial.println (Adelay);
+    DW1000.setAntennaDelay(Adelay);
   }
-  dist = dist/NUMBER_OF_DISTANCES;
-  Serial.println(dist);
 }
 
 void newDevice(DW1000Device *device)
