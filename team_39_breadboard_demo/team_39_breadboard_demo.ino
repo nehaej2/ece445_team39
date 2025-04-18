@@ -2,15 +2,28 @@
 #include <math.h>
 
 // Motor Pin Definitions
-#define AIN1 15
-#define AIN2 16
-#define PWMA 17
 
-#define BIN1 6
-#define BIN2 5
-#define PWMB 4
+// From breadboard demo
+//#define AIN1 15
+//#define AIN2 16
+//#define PWMA 17
+//
+//#define BIN1 6
+//#define BIN2 5
+//#define PWMB 4
+//
+//#define STBY 7
 
-#define STBY 7
+// For current testing 4/17
+#define AIN1 8 //
+#define AIN2 18 //
+#define PWMA 17 //
+
+#define BIN1 46
+#define BIN2 9
+#define PWMB 14
+
+#define STBY 3
 
 // PWM Set-up
 #define BASE_FREQ 5000
@@ -57,6 +70,9 @@ void setup() {
 }
 
 void loop() {
+
+  brake();
+  
   fwd_v2(3, 2.6);
 
   delay(3000);
@@ -133,6 +149,17 @@ void fwd_median(double median_distance){
 */
 
 void fwd_v2(double a, double b){
+    digitalWrite(STBY, HIGH);
+    digitalWrite(AIN1, HIGH);
+    digitalWrite(AIN2, LOW);
+    ledcWriteChannel(MOTOR_A_CHANNEL, 100);
+    digitalWrite(BIN1, HIGH);
+    digitalWrite(BIN2, LOW);
+    ledcWriteChannel(MOTOR_B_CHANNEL, 100);
+}
+
+/*
+void fwd_v2(double a, double b){
     if(get_median(a, b) < STOP_DISTANCE) // set duty cycle to 0
       return;
     else if(get_median(a, b) >= STOP_DISTANCE && get_median(a, b) < MAX_DISTANCE){ // linearly duty cycle between 1.5 and 3
@@ -148,13 +175,13 @@ void fwd_v2(double a, double b){
 
         digitalWrite(BIN1, HIGH);
         digitalWrite(BIN2, LOW);
-        ledcWriteChannel(MOTOR_B_CHANNEL, int(scaled_dc * .2)); //decrease duty cycle of motor b
+        ledcWriteChannel(MOTOR_B_CHANNEL, int(scaled_dc * 1)); //decrease duty cycle of motor b
 
       //if angle a > angle b
       } else if (get_angle_a(a,b) > get_angle_b(a,b)){
         digitalWrite(AIN1, HIGH);
         digitalWrite(AIN2, LOW);
-        ledcWriteChannel(MOTOR_A_CHANNEL, int(scaled_dc * .2)); //decrease duty cycle of motor a
+        ledcWriteChannel(MOTOR_A_CHANNEL, int(scaled_dc * 1)); //decrease duty cycle of motor a
 
         digitalWrite(BIN1, HIGH);
         digitalWrite(BIN2, LOW);
@@ -172,13 +199,13 @@ void fwd_v2(double a, double b){
 
         digitalWrite(BIN1, HIGH);
         digitalWrite(BIN2, LOW);
-        ledcWriteChannel(MOTOR_B_CHANNEL, int(255 * .2)); //decrease duty cycle of motor b
+        ledcWriteChannel(MOTOR_B_CHANNEL, int(255 * 1)); //decrease duty cycle of motor b
 
       //if angle a > angle b
       } else if (get_angle_a(a,b) > get_angle_b(a,b)){
         digitalWrite(AIN1, HIGH);
         digitalWrite(AIN2, LOW);
-        ledcWriteChannel(MOTOR_A_CHANNEL, int(255 * .2)); //decrease duty cycle of motor a
+        ledcWriteChannel(MOTOR_A_CHANNEL, int(255 * 1)); //decrease duty cycle of motor a
 
         digitalWrite(BIN1, HIGH);
         digitalWrite(BIN2, LOW);
@@ -186,6 +213,7 @@ void fwd_v2(double a, double b){
       }
   }
 }
+*/
 
 /*
 void fwd(int left_speed, int right_speed, double distA, double distB){
