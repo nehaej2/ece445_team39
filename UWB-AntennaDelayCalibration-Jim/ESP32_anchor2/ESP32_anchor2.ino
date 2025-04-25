@@ -9,7 +9,7 @@
 #include "DW1000.h"
 
 // leftmost two bytes below will become the "short address"
-char anchor_addr[] = "84:00:5B:D5:A9:9A:E2:9C"; //#4
+char anchor_addr[] = "83:00:5B:D5:A9:9A:E2:9C"; //#4
 
 #define SPI_SCK 12
 #define SPI_MISO 13
