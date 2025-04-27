@@ -23,23 +23,23 @@ const uint8_t PIN_SS = 9;   // spi select pin
 
 
 //calibrated Antenna Delay setting for this anchor
-
 uint16_t Adelay = 16600; //starting value
 float dist_m = 1.5; // calibration distance meters 
 uint16_t Adelay_delta = 100; //initial binary search step size
-// previously determined calibration results for antenna delay
-// #1 16630
-// #2 16610
-// #3 16607
-// #4 16580
-// #5 16623
-// #6 16589
-// #7 16673s
+
+//Kalman filter variables 
+float estimate = 0; //Initial guess of distance 
+float estimate_error = 1; //Initial guess of the estimate error 
+float measurement_error = 4; //TODO: tune this measurement noise. Based on how jumpy your UWB readings are. If you see ±20 cm jumps, maybe set measurement_error = 0.04 m² = (20 cm)².
+float process_noise = 0.05; //TODO: tune this process noise. Control how quickly you want the filter to adapt. Start low like 0.01, increase if it feels sluggish.
+float kalman_gain = 0; 
 
 void setup()
 {
   Serial.begin(115200);
-  while (!Serial); //wait for serial monitor to connect
+  estimate = 0; 
+
+  while (!Serial); //wait for serial monitor to connect TODO: remove when testing without serial monitor!
 
   //init the configuration
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
@@ -56,7 +56,7 @@ void setup()
   DW1000Ranging.attachInactiveDevice(inactiveDevice);
 
   //start the module as an anchor, do not assign random short address
-  DW1000Ranging.startAsAnchor(anchor_addr, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
+  DW1000Ranging.startAsAnchor(anchor_addr, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false); //TODO: do we want to switch modes?
   // DW1000Ranging.startAsAnchor(ANCHOR_ADD, DW1000.MODE_SHORTDATA_FAST_LOWPOWER);
   // DW1000Ranging.startAsAnchor(ANCHOR_ADD, DW1000.MODE_LONGDATA_FAST_LOWPOWER);
   // DW1000Ranging.startAsAnchor(ANCHOR_ADD, DW1000.MODE_SHORTDATA_FAST_ACCURACY);
@@ -84,13 +84,20 @@ void newRange()
     Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), DEC);
     Serial.print(", ");
   
-#define NUMBER_OF_DISTANCES 1
-    float distance = 0.0;
-    for (int i = 0; i < NUMBER_OF_DISTANCES; i++) {
-      distance += DW1000Ranging.getDistantDevice()->getRange();
-    }
-    distance = distance/NUMBER_OF_DISTANCES;
-    Serial.println(distance); 
+    float distance = DW1000Ranging.getDistantDevice()->getRange();
+
+    //Kalman filter 
+    estimate_error = estimate_error + process_noise; // predict step: increawse uncertainty 
+
+    kalman_gain = estimate_error / (estimate_error + measurement_error); // update step
+    estimate = estimate + kalman_gain * (distance - estimate);
+    estimate_error = (1 - kalman_gain) * estimate_error;
+
+    Serial.print("Raw measurement: ");
+    Serial.print(distance);
+    Serial.print(" | Filtered estimate: ");
+    Serial.println(estimate);
+
   }else{
     //Continue Antenna Callibration
     float dist = DW1000Ranging.getDistantDevice()->getRange();
