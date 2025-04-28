@@ -1,6 +1,4 @@
 //anchor #4 setup
-
-
 // be sure to edit anchor_addr and select the previously calibrated anchor delay
 // my naming convention is anchors 1, 2, 3, ... have the lowest order byte of the MAC address set to 81, 82, 83, ...
 
@@ -11,28 +9,39 @@
 // leftmost two bytes below will become the "short address"
 char anchor_addr[] = "84:00:5B:D5:A9:9A:E2:9C"; //#4
 
-#define SPI_SCK 12
-#define SPI_MISO 13
-#define SPI_MOSI 11
-#define DW_CS 9
+////ESP32 S3 pin config
+//#define SPI_SCK 12
+//#define SPI_MISO 13
+//#define SPI_MOSI 11
+//#define DW_CS 9
+//// connection pins
+//const uint8_t PIN_RST = 5; // reset pin
+//const uint8_t PIN_IRQ = 4; // irq pin
+//const uint8_t PIN_SS = 9;   // spi select pin
 
+//ESP32 pin config
+#define SPI_SCK 18
+#define SPI_MISO 19
+#define SPI_MOSI 23
+#define DW_CS 4
 // connection pins
-const uint8_t PIN_RST = 5; // reset pin
-const uint8_t PIN_IRQ = 4; // irq pin
-const uint8_t PIN_SS = 9;   // spi select pin
-
+const uint8_t PIN_RST = 27; // reset pin
+const uint8_t PIN_IRQ = 34; // irq pin
+const uint8_t PIN_SS = 4;   // spi select pin
 
 //calibrated Antenna Delay setting for this anchor
 uint16_t Adelay = 16600; //starting value
-float dist_m = 1.5; // calibration distance meters 
+float dist_m = 1; // calibration distance meters 
 uint16_t Adelay_delta = 100; //initial binary search step size
 
 //Kalman filter variables 
 float estimate = 0; //Initial guess of distance 
 float estimate_error = 1; //Initial guess of the estimate error 
-float measurement_error = 4; //TODO: tune this measurement noise. Based on how jumpy your UWB readings are. If you see ±20 cm jumps, maybe set measurement_error = 0.04 m² = (20 cm)².
-float process_noise = 0.05; //TODO: tune this process noise. Control how quickly you want the filter to adapt. Start low like 0.01, increase if it feels sluggish.
+float measurement_error = 0.04; //TODO: tune this measurement noise. Based on how jumpy your UWB readings are. If you see ±20 cm jumps, maybe set measurement_error = 0.04 m² = (20 cm)².
+float process_noise = 0.07; //TODO: tune this process noise. Control how quickly you want the filter to adapt. Start low like 0.01, increase if it feels sluggish.
 float kalman_gain = 0; 
+
+//For list for taking the average 
 
 void setup()
 {
@@ -85,18 +94,8 @@ void newRange()
     Serial.print(", ");
   
     float distance = DW1000Ranging.getDistantDevice()->getRange();
-
-    //Kalman filter 
-    estimate_error = estimate_error + process_noise; // predict step: increawse uncertainty 
-
-    kalman_gain = estimate_error / (estimate_error + measurement_error); // update step
-    estimate = estimate + kalman_gain * (distance - estimate);
-    estimate_error = (1 - kalman_gain) * estimate_error;
-
-    Serial.print("Raw measurement: ");
-    Serial.print(distance);
-    Serial.print(" | Filtered estimate: ");
-    Serial.println(estimate);
+    KalmanFilter(distance);
+    
 
   }else{
     //Continue Antenna Callibration
@@ -128,4 +127,19 @@ void inactiveDevice(DW1000Device *device)
 {
   Serial.print("Delete inactive device: ");
   Serial.println(device->getShortAddress(), HEX);
+}
+
+void KalmanFilter(float distance)
+{
+   //Kalman filter 
+    estimate_error = estimate_error + process_noise; // predict step: increawse uncertainty 
+
+    kalman_gain = estimate_error / (estimate_error + measurement_error); // update step
+    estimate = estimate + kalman_gain * (distance - estimate);
+    estimate_error = (1 - kalman_gain) * estimate_error;
+
+    Serial.print("Raw measurement: ");
+    Serial.print(distance);
+    Serial.print(" | Filtered estimate: ");
+    Serial.println(estimate);
 }
