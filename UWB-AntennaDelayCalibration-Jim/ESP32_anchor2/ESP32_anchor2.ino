@@ -7,28 +7,39 @@
 #include "DW1000Ranging.h"
 #include "DW1000.h"
 
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h>
+#include <BLE2902.h> 
+
 // leftmost two bytes below will become the "short address"
 char anchor_addr[] = "83:00:5B:D5:A9:9A:E2:9C"; //#4
 
-//ESP32 S3 pin config+
-#define SPI_SCK 12
-#define SPI_MISO 13
-#define SPI_MOSI 11
-#define DW_CS 9
-// connection pins
-const uint8_t PIN_RST = 5; // reset pin
-const uint8_t PIN_IRQ = 4; // irq pin
-const uint8_t PIN_SS = 9;   // spi select pin
+/*        PIN CONFIGS       */
 
-////ESP32 pin config
-//#define SPI_SCK 18
-//#define SPI_MISO 19
-//#define SPI_MOSI 23
-//#define DW_CS 4
-//// connection pins
-//const uint8_t PIN_RST = 27; // reset pin
-//const uint8_t PIN_IRQ = 34; // irq pin
-//const uint8_t PIN_SS = 4;   // spi select pin
+// // ESP32-S3 pin configs
+// #define SPI_SCK 12
+// #define SPI_MISO 13
+// #define SPI_MOSI 11
+// #define DW_CS 9
+
+// // connection pins
+// const uint8_t PIN_RST = 5; // reset pin
+// const uint8_t PIN_IRQ = 4; // irq pin
+// const uint8_t PIN_SS = 9;   // spi select pin
+
+
+// ESP32 ONLY pin configs
+#define SPI_SCK 18
+#define SPI_MISO 19
+#define SPI_MOSI 23
+#define DW_CS 4
+
+// connection pins
+const uint8_t PIN_RST = 27; // reset pin
+const uint8_t PIN_IRQ = 34; // irq pin
+const uint8_t PIN_SS = 4;   // spi select pin
+
 
 //calibrated Antenna Delay setting for this anchor
 uint16_t Adelay = 16600; //starting value
@@ -48,6 +59,34 @@ float distanceWindow[windowSize];
 int windowIndex = 0;
 bool windowReady = false;
 
+float filteredAvgDistance = 0;
+
+
+/* BLE Globals and Definitions*/
+
+// Our unique service ID for data transmission
+#define SERVICE_UUID        "ad560f3e-5103-4317-9541-eb28e8e4551b"
+
+// Global stuff
+BLEService *pService;
+bool deviceConnected = false;
+BLECharacteristic *pCharacteristic;
+
+/*        BLUETOOTH CLASSES AND FUNCTIONS       */
+
+// Callback function for BLE 
+class MyServerCallbacks: public BLEServerCallbacks {
+  void onConnect(BLEServer* pServer) {
+    deviceConnected = true;
+  };
+  void onDisconnect(BLEServer* pServer) {
+    deviceConnected = false;
+
+    Serial.println("Client disconnected. Restart advertising...");
+    pServer->startAdvertising();
+  }
+};
+
 void setup()
 {
   Serial.begin(115200);
@@ -55,7 +94,33 @@ void setup()
 
   //while (!Serial); //wait for serial monitor to connect TODO: remove when testing without serial monitor!
 
-  //init the configuration
+
+  /*       BLE: init the configuration       */
+  Serial.println("Starting BLE work!");
+
+  BLEDevice::init("Long name works now");
+  BLEServer *pServer = BLEDevice::createServer();
+
+  pServer->setCallbacks(new MyServerCallbacks());
+
+  BLEService *pService = pServer->createService(SERVICE_UUID);
+
+  // Defining the distance characteristic -- notify so we can send value over
+  pCharacteristic = pService->createCharacteristic(
+    "a9e3380c-3391-47e7-91e1-9eaa9bd0e5e5",
+    BLECharacteristic::PROPERTY_NOTIFY
+  );
+
+  pCharacteristic->addDescriptor(new BLE2902());
+
+  pService->start();
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->setScanResponse(true);
+  pAdvertising->start();
+  Serial.println("Waiting a client connection to notify...");
+
+  /*      UWB: init the configuration       */
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
 
@@ -75,7 +140,11 @@ void setup()
 
 void loop()
 {
-  DW1000Ranging.loop();
+  if (deviceConnected){
+    DW1000Ranging.loop();
+  }else{
+    Serial.print("Device disconnected, waiting to reconnect");
+  }
 }
 
 void newRange()
@@ -95,15 +164,18 @@ void newRange()
 
     if(windowReady)
     {
-      float filteredAvgDistance = computeAverage();
-      Serial.print("Final smoothed distance: ");
+      filteredAvgDistance = computeAverage();
+      Serial.print("Final (sent) smoothed distance: ");
       Serial.println(filteredAvgDistance);
+
+      pCharacteristic->setValue(String(filteredAvgDistance).c_str()); // set value to send
+      pCharacteristic->notify();  // Notify the client -- this is what actually sends the value over to the client
     }
 
   }else{
     //Continue Antenna Callibration
     float dist = DW1000Ranging.getDistantDevice()->getRange();
-    Serial.print("distance: ");
+    Serial.print("calibration distance: ");
     Serial.print(dist); 
     
     float this_delta = dist - dist_m;  //error in measured distance
