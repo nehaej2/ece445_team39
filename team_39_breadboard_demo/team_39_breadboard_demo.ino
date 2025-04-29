@@ -40,66 +40,55 @@
 #define STOP_DISTANCE 1.5 // wagon will stop when within 1.5 m of user
 #define MAX_DISTANCE 3    // wagon will stop accelerating when distance to user exceeds 3 m
 
-//#define PWM_FREQ 78000 //100kHz
-//#define PWM_RESOLUTION 10 //will generate 78.1kHz
-
 void setup() {
   // put your setup code here, to run once:
-
-  // Enable PWM communication. Can enable via pin or channel. 
-  // Channels can be connected to more than 1 device/motor
-  // For now, we can use 1 channel per motor
-//  Serial.begin(9600);
-//  bool frequencySetA = true;
-//  bool frequencySetB = true;
-//  frequencySetA = ledcAttach(PWMA, PWM_FREQ, PWM_RESOLUTION);
-//  frequencySetB = ledcAttach(PWMB, PWM_FREQ, PWM_RESOLUTION);
-//  Serial.print(frequencySetA);
-//  Serial.print(frequencySetB);
-
-  ledcAttachChannel(PWMA, BASE_FREQ, RESOL, MOTOR_A_CHANNEL);
-  ledcAttachChannel(PWMB, BASE_FREQ, RESOL, MOTOR_B_CHANNEL);
+  Serial.begin(9600);
 
   // MUST initialize pins to be input or output for use
   pinMode(AIN1, OUTPUT);
   pinMode(AIN2, OUTPUT);
   pinMode(STBY, OUTPUT);
-
   pinMode(BIN1, OUTPUT);
   pinMode(BIN2, OUTPUT);
+  pinMode(PWMA, OUTPUT);
+  pinMode(PWMB, OUTPUT);
+  
+  // Enable PWM communication. Can enable via pin or channel. 
+  // Channels can be connected to more than 1 device/motor
+  // For now, we can use 1 channel per motor
+  
+  bool frequencySetA = ledcAttachChannel(PWMA, BASE_FREQ, RESOL, MOTOR_A_CHANNEL);
+  bool frequencySetB = ledcAttachChannel(PWMB, BASE_FREQ, RESOL, MOTOR_B_CHANNEL);
+  Serial.print("freqA: ");
+  Serial.print(frequencySetA);
+  Serial.print("freqB: ");
+  Serial.print(frequencySetB);
+
 }
 
 void loop() {
 
   brake();
   
-  fwd_v2(3, 2.6);
+  fwd_v2();
 
   delay(3000);
 
   brake();
 
-  delay(3000);
+  delay(2000);
+}
 
-
- 
-  fwd_v2(2.6, 3);
-
-  delay(3000);
-
-  brake();
-
-  delay(3000);
-
-
-
-  fwd_v2(3, 3);
-
-  delay(3000);
-  
-  brake();
-
-  delay(3000);
+void fwd_v2(){
+    digitalWrite(STBY, HIGH);
+    digitalWrite(AIN1, HIGH);
+    digitalWrite(AIN2, LOW);
+    bool write_out1 = ledcWriteChannel(MOTOR_A_CHANNEL, 100);
+    Serial.print(write_out1);
+    digitalWrite(BIN1, HIGH);
+    digitalWrite(BIN2, LOW);
+    bool write_out2 = ledcWriteChannel(MOTOR_B_CHANNEL, 355);
+    Serial.print(write_out2);
 }
 
 /*
@@ -148,15 +137,7 @@ void fwd_median(double median_distance){
 }
 */
 
-void fwd_v2(double a, double b){
-    digitalWrite(STBY, HIGH);
-    digitalWrite(AIN1, HIGH);
-    digitalWrite(AIN2, LOW);
-    ledcWriteChannel(MOTOR_A_CHANNEL, 100);
-    digitalWrite(BIN1, HIGH);
-    digitalWrite(BIN2, LOW);
-    ledcWriteChannel(MOTOR_B_CHANNEL, 100);
-}
+
 
 /*
 void fwd_v2(double a, double b){
