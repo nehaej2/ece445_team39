@@ -3,31 +3,32 @@
 // my naming convention is anchors 1, 2, 3, ... have the lowest order byte of the MAC address set to 81, 82, 83, ...
 
 #include <SPI.h>
+#include <algorithm>
 #include "DW1000Ranging.h"
 #include "DW1000.h"
 
 // leftmost two bytes below will become the "short address"
 char anchor_addr[] = "84:00:5B:D5:A9:9A:E2:9C"; //#4
 
-////ESP32 S3 pin config
-//#define SPI_SCK 12
-//#define SPI_MISO 13
-//#define SPI_MOSI 11
-//#define DW_CS 9
-//// connection pins
-//const uint8_t PIN_RST = 5; // reset pin
-//const uint8_t PIN_IRQ = 4; // irq pin
-//const uint8_t PIN_SS = 9;   // spi select pin
-
-//ESP32 pin config
-#define SPI_SCK 18
-#define SPI_MISO 19
-#define SPI_MOSI 23
-#define DW_CS 4
+//ESP32 S3 pin config+
+#define SPI_SCK 12
+#define SPI_MISO 13
+#define SPI_MOSI 11
+#define DW_CS 9
 // connection pins
-const uint8_t PIN_RST = 27; // reset pin
-const uint8_t PIN_IRQ = 34; // irq pin
-const uint8_t PIN_SS = 4;   // spi select pin
+const uint8_t PIN_RST = 5; // reset pin
+const uint8_t PIN_IRQ = 4; // irq pin
+const uint8_t PIN_SS = 9;   // spi select pin
+
+////ESP32 pin config
+//#define SPI_SCK 18
+//#define SPI_MISO 19
+//#define SPI_MOSI 23
+//#define DW_CS 4
+//// connection pins
+//const uint8_t PIN_RST = 27; // reset pin
+//const uint8_t PIN_IRQ = 34; // irq pin
+//const uint8_t PIN_SS = 4;   // spi select pin
 
 //calibrated Antenna Delay setting for this anchor
 uint16_t Adelay = 16600; //starting value
@@ -38,17 +39,21 @@ uint16_t Adelay_delta = 100; //initial binary search step size
 float estimate = 0; //Initial guess of distance 
 float estimate_error = 1; //Initial guess of the estimate error 
 float measurement_error = 0.04; //TODO: tune this measurement noise. Based on how jumpy your UWB readings are. If you see ±20 cm jumps, maybe set measurement_error = 0.04 m² = (20 cm)².
-float process_noise = 0.07; //TODO: tune this process noise. Control how quickly you want the filter to adapt. Start low like 0.01, increase if it feels sluggish.
+float process_noise = 0.1; //TODO: tune this process noise. Control how quickly you want the filter to adapt. Start low like 0.01, increase if it feels sluggish.
 float kalman_gain = 0; 
 
 //For list for taking the average 
+const int windowSize = 5;
+float distanceWindow[windowSize];
+int windowIndex = 0;
+bool windowReady = false;
 
 void setup()
 {
   Serial.begin(115200);
   estimate = 0; 
 
-  while (!Serial); //wait for serial monitor to connect TODO: remove when testing without serial monitor!
+  //while (!Serial); //wait for serial monitor to connect TODO: remove when testing without serial monitor!
 
   //init the configuration
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
@@ -66,11 +71,6 @@ void setup()
 
   //start the module as an anchor, do not assign random short address
   DW1000Ranging.startAsAnchor(anchor_addr, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false); //TODO: do we want to switch modes?
-  // DW1000Ranging.startAsAnchor(ANCHOR_ADD, DW1000.MODE_SHORTDATA_FAST_LOWPOWER);
-  // DW1000Ranging.startAsAnchor(ANCHOR_ADD, DW1000.MODE_LONGDATA_FAST_LOWPOWER);
-  // DW1000Ranging.startAsAnchor(ANCHOR_ADD, DW1000.MODE_SHORTDATA_FAST_ACCURACY);
-  // DW1000Ranging.startAsAnchor(ANCHOR_ADD, DW1000.MODE_LONGDATA_FAST_ACCURACY);
-  // DW1000Ranging.startAsAnchor(ANCHOR_ADD, DW1000.MODE_LONGDATA_RANGE_ACCURACY);
 }
 
 void loop()
@@ -87,15 +87,18 @@ void newRange()
     // from here on its only distance calculations
     // set antenna delay for anchors only. Tag is default (16384)
     DW1000.setAntennaDelay(Adelay);
-    Serial.print(", final Adelay ");
-    Serial.println(Adelay);
-    Serial.print("from: ");
-    Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), DEC);
-    Serial.print(", ");
   
     float distance = DW1000Ranging.getDistantDevice()->getRange();
     KalmanFilter(distance);
     
+    addToWindow(estimate);
+
+    if(windowReady)
+    {
+      float filteredAvgDistance = computeAverage();
+      Serial.print("Final smoothed distance: ");
+      Serial.println(filteredAvgDistance);
+    }
 
   }else{
     //Continue Antenna Callibration
@@ -138,8 +141,48 @@ void KalmanFilter(float distance)
     estimate = estimate + kalman_gain * (distance - estimate);
     estimate_error = (1 - kalman_gain) * estimate_error;
 
-    Serial.print("Raw measurement: ");
-    Serial.print(distance);
-    Serial.print(" | Filtered estimate: ");
-    Serial.println(estimate);
+//    Serial.print("Raw measurement: ");
+//    Serial.print(distance);
+//    Serial.print(" | Filtered estimate: ");
+//    Serial.println(estimate);
+}
+
+void addToWindow(float distance)
+{
+  distanceWindow[windowIndex++] = distance;
+  if (windowIndex >= windowSize)
+  {
+    windowReady = true;
+    windowIndex = 0; // reset for next batch
+  }
+}
+
+float computeAverage()
+{
+  if (!windowReady) return -1;
+
+  //calculate mean 
+  float sum;
+  for(int i = 0; i < windowSize; i++)
+  {
+    sum += distanceWindow[i];
+  }
+  float mean = sum / windowSize;
+
+  //remove outliers 
+  sum = 0;
+  int count = 0;
+  for(int i = 0; i < windowSize; i++)
+  {
+    if(abs(distanceWindow[i] - mean) < 0.25 && distanceWindow[i] > 0)
+    {
+      sum += distanceWindow[i];
+      count++;
+    }
+  }
+  float average = sum/count;
+
+  windowReady = false;
+  if (count == 0) return mean; //TODO: change to median
+  return average;
 }

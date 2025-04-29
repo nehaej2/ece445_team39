@@ -7,25 +7,25 @@
 #include "DW1000.h"
 #include "link.h"
 
-////ESP32 pin config
-//#define SPI_SCK 18
-//#define SPI_MISO 19
-//#define SPI_MOSI 23
-//#define DW_CS 4
-//// connection pins
-//const uint8_t PIN_RST = 27; // reset pin
-//const uint8_t PIN_IRQ = 34; // irq pin
-//const uint8_t PIN_SS = 4;   // spi select pin
-
-//ESP32 S3 pin config
-#define SPI_SCK 12
-#define SPI_MISO 13
-#define SPI_MOSI 11
-#define DW_CS 9
+//ESP32 pin config
+#define SPI_SCK 18
+#define SPI_MISO 19
+#define SPI_MOSI 23
+#define DW_CS 4
 // connection pins
-const uint8_t PIN_RST = 5; // reset pin
-const uint8_t PIN_IRQ = 4; // irq pin
-const uint8_t PIN_SS = 9;   // spi select pin
+const uint8_t PIN_RST = 27; // reset pin
+const uint8_t PIN_IRQ = 34; // irq pin
+const uint8_t PIN_SS = 4;   // spi select pin
+
+////ESP32 S3 pin config
+//#define SPI_SCK 12
+//#define SPI_MISO 13
+//#define SPI_MOSI 11
+//#define DW_CS 9
+//// connection pins
+//const uint8_t PIN_RST = 5; // reset pin
+//const uint8_t PIN_IRQ = 4; // irq pin
+//const uint8_t PIN_SS = 9;   // spi select pin
 
 struct MyLink *anchor_list;
 int index_num = 0;
@@ -40,7 +40,6 @@ char tag_addr[] = "7D:00:22:EA:82:60:3B:9C";
 void setup()
 {
   Serial.begin(115200);
-  delay(1000);
 
   //init the configuration
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
