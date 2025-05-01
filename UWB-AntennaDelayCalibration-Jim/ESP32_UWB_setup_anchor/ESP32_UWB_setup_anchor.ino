@@ -23,30 +23,15 @@ so we can receive data from the other anchor.
 char anchor_addr[] = "84:00:5B:D5:A9:9A:E2:9C"; //#4
 
 
-// // ESP32-S3 pin configs
-
-// #define SPI_SCK 12
-// #define SPI_MISO 13
-// #define SPI_MOSI 11
-// #define DW_CS 9
-
-// // connection pins
-// const uint8_t PIN_RST = 5; // reset pin
-// const uint8_t PIN_IRQ = 4; // irq pin
-// const uint8_t PIN_SS = 9;   // spi select pin
-
-
-// ESP32 ONLY pin configs
-
+//ESP32 pin config
 #define SPI_SCK 18
 #define SPI_MISO 19
 #define SPI_MOSI 23
-#define DW_CS 4
-
+#define DW_CS 5
 // connection pins
-const uint8_t PIN_RST = 27; // reset pin
-const uint8_t PIN_IRQ = 34; // irq pin
-const uint8_t PIN_SS = 4;   // spi select pin
+const uint8_t PIN_RST = 4; // reset pin
+const uint8_t PIN_IRQ = 0; // irq pin
+const uint8_t PIN_SS = 5;   // spi select pin
 
 
 //calibrated Antenna Delay setting for this anchor
@@ -70,7 +55,6 @@ bool windowReady = false;
 float filteredAvgDistance = 0;
 
 /*       BLE GLobals and Definitions       */
-
 // The remote service we wish to connect to -- same on server side
 static BLEUUID serviceUUID("ad560f3e-5103-4317-9541-eb28e8e4551b");
 
@@ -88,9 +72,34 @@ static BLERemoteCharacteristic* distanceCharacteristic;
 float distanceVal;
 boolean newDistance = false;
 
+// Motor Pin Definitions
+#define AIN1 27
+#define AIN2 26
+#define PWMA 25 
+#define BIN1 12
+#define BIN2 13
+#define PWMB 15
+#define STBY 14
+
+// PWM Set-up
+#define BASE_FREQ 5000
+#define RESOL 8 // With 8 bit resolution, the duty ranges from 0->255
+#define MOTOR_A_CHANNEL 1
+#define MOTOR_B_CHANNEL 2
+
+// Motor labels
+#define MOTORA 1
+#define MOTORB 2
+
+// Distances
+#define STOP_DISTANCE 1.5 // wagon will stop when within 1.5 m of user
+#define MAX_DISTANCE 3    // wagon will stop accelerating when distance to user exceeds 3 m
+
+//#define PWM_FREQ 5000 //100kHz
+//#define PWM_RESOLUTION 8 //will generate 78.1kHz
+
 
 /*        BLE CLASSES AND FUNCTIONS       */
-
 // BLE Callback function
 class MyClientCallback : public BLEClientCallbacks {
   void onConnect(BLEClient *pclient) {}
@@ -199,7 +208,6 @@ void setup()
   pBLEScan->start(5, false);
 
   /* UWB SET UP */
-
   //init the configuration
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
@@ -216,6 +224,19 @@ void setup()
 
   //start the module as an anchor, do not assign random short address
   DW1000Ranging.startAsAnchor(anchor_addr, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false); //TODO: do we want to switch modes?
+
+  /* MOTOR SET UP */
+  // MUST initialize pins to be input or output for use 
+  pinMode(AIN1, OUTPUT);
+  pinMode(AIN2, OUTPUT);
+  pinMode(STBY, OUTPUT);
+  pinMode(PWMA, OUTPUT);
+  pinMode(PWMB, OUTPUT);
+  pinMode(BIN1, OUTPUT);
+  pinMode(BIN2, OUTPUT);
+  
+  ledcAttachChannel(PWMA, BASE_FREQ, RESOL, MOTOR_A_CHANNEL);
+  ledcAttachChannel(PWMB, BASE_FREQ, RESOL, MOTOR_B_CHANNEL);
 }
 
 void loop()
@@ -239,6 +260,9 @@ void loop()
       Serial.println(distanceVal);
       Serial.print(", ");
       newDistance = false;
+
+      fwd_v2(filteredAvgDistance, distanceVal);
+      
     }
   } else if (doScan) {
     Serial.print("Attempting to scan");
@@ -355,4 +379,118 @@ float computeAverage()
   windowReady = false;
   if (count == 0) return mean; //TODO: change to median
   return average;
+}
+
+void fwd_v2(double a, double b){
+    Serial.println("in fwd_v2");
+//    Serial.println(a);
+//    Serial.println(b);
+    double angle_a = get_angle_a(a, b);
+    double angle_b = get_angle_b(a, b);
+    double difference = abs(angle_a - angle_b);
+    double median_dist = get_median(a, b);
+    int scaled_dc = fmin(170 * median_dist - 255, 255);
+    
+    // is user within 1.5 m of wagon?
+    if(median_dist < 1.5){
+        return;
+    }else if (median_dist >= 1.5){
+        // case 1: a and b within .2 radians (about 11.5 degrees)
+        if(difference < .2){
+            // go straight
+            straight(a, b, scaled_dc);
+            Serial.println("straight");
+        }
+        // case 2: a > b
+        else if(angle_a > angle_b && difference >= .2){
+            // decrease duty cycle of a 
+            left(a, b, scaled_dc);
+            Serial.println("left");
+        }
+        // case 3: a < b
+        else if (angle_a < angle_b && difference >= .2){
+            // decrease duty cycle of b
+            right(a, b, scaled_dc);
+            Serial.println("right");
+        }
+    }
+    
+}
+
+void left(double a, double b, int scaled_dc){
+    digitalWrite(STBY, HIGH);
+    digitalWrite(AIN1, HIGH);
+    digitalWrite(AIN2, LOW);
+    ledcWriteChannel(MOTOR_A_CHANNEL, int(scaled_dc * .7)); //decrease duty cycle of motor a
+    digitalWrite(BIN1, HIGH);
+    digitalWrite(BIN2, LOW);
+    ledcWriteChannel(MOTOR_B_CHANNEL, scaled_dc);
+}
+
+void straight(double a, double b, int scaled_dc){
+    digitalWrite(STBY, HIGH);
+    digitalWrite(AIN1, HIGH);
+    digitalWrite(AIN2, LOW);
+    ledcWriteChannel(MOTOR_A_CHANNEL, scaled_dc); //decrease duty cycle of motor a
+    digitalWrite(BIN1, HIGH);
+    digitalWrite(BIN2, LOW);
+    ledcWriteChannel(MOTOR_B_CHANNEL, scaled_dc);
+}
+
+void right(double a, double b, int scaled_dc){
+    digitalWrite(STBY, HIGH);
+    digitalWrite(AIN1, HIGH);
+    digitalWrite(AIN2, LOW);
+    ledcWriteChannel(MOTOR_A_CHANNEL, scaled_dc); 
+    digitalWrite(BIN1, HIGH);
+    digitalWrite(BIN2, LOW);
+    ledcWriteChannel(MOTOR_B_CHANNEL, int(scaled_dc * .7)); //decrease duty cycle of motor a
+}
+
+// Stops both motors
+void brake(){
+  digitalWrite(STBY, HIGH);
+  digitalWrite(AIN1, HIGH);
+  digitalWrite(AIN2, HIGH);
+  
+  digitalWrite(BIN1, HIGH);
+  digitalWrite(BIN2, HIGH);
+  ledcWriteChannel(MOTOR_A_CHANNEL,0);
+  ledcWriteChannel(MOTOR_B_CHANNEL,0);
+}
+
+/*
+ * get_angle_a:
+ * returns: angle a in radians
+ * 
+ * parameters:
+ * a: length of left motor to user
+ * b: length of right motor to user
+*/
+double get_angle_a(double a, double b){
+  return acos((a * a + 0.457 * 0.457 - b * b)/(2 * a * 0.457));
+}
+
+/*
+ * get_angle_b:
+ * returns: angle a in radians
+ * 
+ * parameters:
+ * a: length of left motor to user
+ * b: length of right motor to user
+*/
+double get_angle_b(double a, double b){
+  return acos((b * b + 0.457 * 0.457 - a * a)/(2 * b * 0.457));
+}
+
+/*
+ * get_median:
+ * returns: length of median of triangle from middle of two motors to user
+ * 
+ * parameters:
+ * a: length of left motor to user
+ * b: length of right motor to user
+*/
+double get_median(double a, double b){
+  return 0.5 * sqrt((2 * a * a) + (2 * b * b) - (0.457 * 0.457));
 }

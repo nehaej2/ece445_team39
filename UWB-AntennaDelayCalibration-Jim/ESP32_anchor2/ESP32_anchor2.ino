@@ -143,7 +143,7 @@ void loop()
   if (deviceConnected){
     DW1000Ranging.loop();
   }else{
-    Serial.print("Device disconnected, waiting to reconnect");
+    Serial.println("Device disconnected, waiting to reconnect");
   }
 }
 
