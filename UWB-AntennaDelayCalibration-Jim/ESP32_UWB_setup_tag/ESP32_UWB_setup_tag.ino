@@ -1,31 +1,17 @@
-// currently tag is module #5
-// The purpose of this code is to set the tag address and antenna delay to default.
-// this tag will be used for calibrating the anchors.
-
+// TAG CODE
 #include <SPI.h>
 #include "DW1000Ranging.h"
 #include "DW1000.h"
 #include "link.h"
 
-//ESP32 pin config
+// ESP 32 PORTS
 #define SPI_SCK 18
 #define SPI_MISO 19
 #define SPI_MOSI 23
 #define DW_CS 4
-// connection pins
 const uint8_t PIN_RST = 27; // reset pin
 const uint8_t PIN_IRQ = 34; // irq pin
 const uint8_t PIN_SS = 4;   // spi select pin
-
-////ESP32 S3 pin config
-//#define SPI_SCK 12
-//#define SPI_MISO 13
-//#define SPI_MOSI 11
-//#define DW_CS 9
-//// connection pins
-//const uint8_t PIN_RST = 5; // reset pin
-//const uint8_t PIN_IRQ = 4; // irq pin
-//const uint8_t PIN_SS = 9;   // spi select pin
 
 struct MyLink *anchor_list;
 int index_num = 0;

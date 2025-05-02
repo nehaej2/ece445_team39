@@ -1,85 +1,47 @@
-//anchor #4 setup
-// be sure to edit anchor_addr and select the previously calibrated anchor delay
-// my naming convention is anchors 1, 2, 3, ... have the lowest order byte of the MAC address set to 81, 82, 83, ...
-
-/*
-
-IMPORTANT (MOTOR SUBSYSTEM -- CLIENT):
-This will be our motor subsystem anchor. For bluetooth communication it will be configured to be the client
-so we can receive data from the other anchor. 
-
-*/
-
+// ANCHOR 2 CODE 
 #include <SPI.h>
 #include <algorithm>
 #include "DW1000Ranging.h"
 #include "DW1000.h"
 
-#include "BLEDevice.h"
-
-/*      UWB Global Variables and Definitions       */
-
 // leftmost two bytes below will become the "short address"
-char anchor_addr[] = "84:00:5B:D5:A9:9A:E2:9C"; //#4
+char anchor_addr[] = "83:00:5B:D5:A9:9A:E2:9C"; //#4
 
-
-//ESP32 pin config
+// ESP 32 PORTS
 #define SPI_SCK 18
 #define SPI_MISO 19
 #define SPI_MOSI 23
-#define DW_CS 5
-// connection pins
-const uint8_t PIN_RST = 4; // reset pin
-const uint8_t PIN_IRQ = 0; // irq pin
-const uint8_t PIN_SS = 5;   // spi select pin
+#define DW_CS 4
+const uint8_t PIN_RST = 27; // reset pin
+const uint8_t PIN_IRQ = 34; // irq pin
+const uint8_t PIN_SS = 4;   // spi select pin
 
+// Motor driver pins 
+#define AIN1 25
+#define AIN2 16 
+#define PWMA 17 
+#define BIN1 14
+#define BIN2 13
+#define PWMB 32
+#define STBY 26
 
-//calibrated Antenna Delay setting for this anchor
+// Calibrated Antenna Delay setting for this anchor
 uint16_t Adelay = 16600; //starting value
 float dist_m = 1; // calibration distance meters 
 uint16_t Adelay_delta = 100; //initial binary search step size
 
-//Kalman filter variables 
+// Kalman filter variables 
 float estimate = 0; //Initial guess of distance 
 float estimate_error = 1; //Initial guess of the estimate error 
 float measurement_error = 0.04; //TODO: tune this measurement noise. Based on how jumpy your UWB readings are. If you see ±20 cm jumps, maybe set measurement_error = 0.04 m² = (20 cm)².
 float process_noise = 0.1; //TODO: tune this process noise. Control how quickly you want the filter to adapt. Start low like 0.01, increase if it feels sluggish.
 float kalman_gain = 0; 
 
-//For list for taking the average 
+// List for taking the average 
 const int windowSize = 5;
 float distanceWindow[windowSize];
 int windowIndex = 0;
 bool windowReady = false;
-
-float filteredAvgDistance = 0;
-
-/*       BLE GLobals and Definitions       */
-// The remote service we wish to connect to -- same on server side
-static BLEUUID serviceUUID("ad560f3e-5103-4317-9541-eb28e8e4551b");
-
-// The characteristic of the remote service we are interested in -- distance characteristic
-static BLEUUID distanceCharacteristicUUID("a9e3380c-3391-47e7-91e1-9eaa9bd0e5e5");
-
-// Global stuff
-static boolean doConnect = false;
-static boolean connected = false;
-static boolean doScan = false;
-static BLEAdvertisedDevice *myDevice;
-
-static BLERemoteCharacteristic* distanceCharacteristic;
-
-float distanceVal;
-boolean newDistance = false;
-
-// Motor Pin Definitions
-#define AIN1 27
-#define AIN2 26
-#define PWMA 25 
-#define BIN1 12
-#define BIN2 13
-#define PWMB 15
-#define STBY 14
 
 // PWM Set-up
 #define BASE_FREQ 5000
@@ -91,131 +53,25 @@ boolean newDistance = false;
 #define MOTORA 1
 #define MOTORB 2
 
-// Distances
-#define STOP_DISTANCE 1.5 // wagon will stop when within 1.5 m of user
-#define MAX_DISTANCE 3    // wagon will stop accelerating when distance to user exceeds 3 m
-
-//#define PWM_FREQ 5000 //100kHz
-//#define PWM_RESOLUTION 8 //will generate 78.1kHz
-
-
-/*        BLE CLASSES AND FUNCTIONS       */
-// BLE Callback function
-class MyClientCallback : public BLEClientCallbacks {
-  void onConnect(BLEClient *pclient) {}
-
-  void onDisconnect(BLEClient *pclient) {
-    connected = false;
-    doScan = true;
-    Serial.println("onDisconnect");
-  }
-};
-
-bool connectToServer() {
-  Serial.print("Forming a connection to ");
-  Serial.println(myDevice->getAddress().toString().c_str());
-
-  BLEClient *pClient = BLEDevice::createClient();
-  Serial.println(" - Created client");
-
-  pClient->setClientCallbacks(new MyClientCallback());
-
-  // Connect to the remove BLE Server.
-  pClient->connect(myDevice);  // if you pass BLEAdvertisedDevice instead of address, it will be recognized type of peer device address (public or private)
-  Serial.println(" - Connected to server");
-  delay(50);
-  pClient->setMTU(517);  //set client to request maximum MTU from server (default is 23 otherwise)
-
-  // Obtain a reference to the service we are after in the remote BLE server.
-  Serial.println(" - Getting remote service now...");
-  BLERemoteService *pRemoteService = pClient->getService("ad560f3e-5103-4317-9541-eb28e8e4551b");
-  if (pRemoteService == nullptr) {
-    Serial.print("Failed to find our service UUID: ");
-    Serial.println(serviceUUID.toString().c_str());
-    pClient->disconnect();
-    return false;
-  }
-
-  Serial.println(" - Found our service");
-
-  // Obtain a reference to the characteristic in the service of the remote BLE server.
-  distanceCharacteristic = pRemoteService->getCharacteristic(distanceCharacteristicUUID);
-  if(distanceCharacteristic == nullptr){
-    Serial.print("Failed to find our characteristic UUID: ");
-    Serial.println(distanceCharacteristicUUID.toString().c_str());
-    pClient->disconnect();
-    return false;
-  }
-  Serial.println(" - Found our characteristic");
-  distanceCharacteristic->registerForNotify(distanceNotifyCallback);
-
-  connected = true;
-  return true;
-}
-
-/**
- * Scan for BLE servers and find the first one that advertises the service we are looking for.
- */
-class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
-  /**
-   * Called for each advertising BLE server.
-   */
-  void onResult(BLEAdvertisedDevice advertisedDevice) {
-    Serial.print("BLE Advertised Device found: ");
-    Serial.println(advertisedDevice.toString().c_str());
-
-    // We have found a device, let us now see if it contains the service we are looking for.
-    if (advertisedDevice.haveServiceUUID() && advertisedDevice.isAdvertisingService(serviceUUID)) {
-
-      BLEDevice::getScan()->stop();
-      myDevice = new BLEAdvertisedDevice(advertisedDevice);
-      doConnect = true;
-      doScan = false;
-
-    }  // Found our server
-  }  // onResult
-};  // MyAdvertisedDeviceCallbacks
-
-// Triggered when a notification is pushed on the server side
-static void distanceNotifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, 
-                                        uint8_t* pData, size_t length, bool isNotify) {
-  //store distance value
-  char* distanceChar = (char*)pData;
-  distanceVal = atof(distanceChar);
-  newDistance = true;
-}
+//FAKE RIGHT WHEEL VALUES
+float RW_1 = 1;
+float RW_2 = 1.5;
+float RW_3 = 1.8;
 
 void setup()
 {
   Serial.begin(115200);
   estimate = 0; 
-
   //while (!Serial); //wait for serial monitor to connect TODO: remove when testing without serial monitor!
 
-  /* BLE SET UP */
-
-  Serial.println("Starting Arduino BLE Client application...");
-  BLEDevice::init("");
-
-  // Retrieve a Scanner and set the callback we want to use to be informed when we
-  // have detected a new device.  Specify that we want active scanning and start the
-  // scan to run for 5 seconds.
-  BLEScan *pBLEScan = BLEDevice::getScan();
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-  pBLEScan->setInterval(1349);
-  pBLEScan->setWindow(449);
-  pBLEScan->setActiveScan(true);
-  pBLEScan->start(5, false);
-
-  /* UWB SET UP */
-  //init the configuration
+  // Init the configuration
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
 
   Serial.print("Starting Adelay "); Serial.println(Adelay);
   Serial.print("Measured distance "); Serial.println(dist_m);
   
-  // set antenna delay for anchors only. Tag is default (16384)
+  // Set antenna delay for anchors only. Tag is default (16384)
   DW1000.setAntennaDelay(Adelay);
 
   DW1000Ranging.attachNewRange(newRange);
@@ -225,13 +81,11 @@ void setup()
   //start the module as an anchor, do not assign random short address
   DW1000Ranging.startAsAnchor(anchor_addr, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false); //TODO: do we want to switch modes?
 
-  /* MOTOR SET UP */
+   /* MOTOR SET UP */
   // MUST initialize pins to be input or output for use 
   pinMode(AIN1, OUTPUT);
   pinMode(AIN2, OUTPUT);
   pinMode(STBY, OUTPUT);
-  pinMode(PWMA, OUTPUT);
-  pinMode(PWMB, OUTPUT);
   pinMode(BIN1, OUTPUT);
   pinMode(BIN2, OUTPUT);
   
@@ -242,45 +96,14 @@ void setup()
 void loop()
 {
   DW1000Ranging.loop();
-
-  if (doConnect == true) {
-    if (connectToServer()) {
-      Serial.println("We are now connected to the BLE Server.");
-    } else {
-      Serial.println("We have failed to connect to the server; there is nothing more we will do.");
-    }
-    doConnect = false;
-  }
-
-  // If we are connected to a peer BLE Server, update the characteristic each time we are reached
-  // with the current time since boot.
-  if (connected) {
-    if(newDistance){
-      Serial.print("Received distance value: ");
-      Serial.println(distanceVal);
-      Serial.print(", ");
-      newDistance = false;
-
-      fwd_v2(filteredAvgDistance, distanceVal);
-      
-    }
-  } else if (doScan) {
-    Serial.print("Attempting to scan");
-    BLEDevice::getScan()->start(0);  // this is just example to start scan after disconnect, most likely there is better way to do it in arduino
-  }
 }
 
 void newRange()
 {
   static float last_delta = 0.0; //retains values between function calls
 
-  if (Adelay_delta < 3) {
-    // Done Callibrating the Antenna Delay
-    // from here on its only distance calculations
-    // set antenna delay for anchors only. Tag is default (16384)
+  if (Adelay_delta < 3) {// Done Callibrating the Antenna Delay. From here on its only distance calculations. Set antenna delay for anchors only. Tag is default (16384)
     DW1000.setAntennaDelay(Adelay);
-    // Serial.print(", final Adelay ");
-    // Serial.println(Adelay);
   
     float distance = DW1000Ranging.getDistantDevice()->getRange();
     KalmanFilter(distance);
@@ -289,15 +112,17 @@ void newRange()
 
     if(windowReady)
     {
-      filteredAvgDistance = computeAverage();
-      Serial.print("This device final smoothed distance: ");
+      float filteredAvgDistance = computeAverage();
+      Serial.print("Final smoothed distance: ");
       Serial.println(filteredAvgDistance);
+      //fwd_v2(filteredAvgDistance, filteredAvgDistance); // Forward 
+      fwd_v2(filteredAvgDistance, 2); // Testing turning on left wheel 
     }
 
   }else{
     //Continue Antenna Callibration
     float dist = DW1000Ranging.getDistantDevice()->getRange();
-    Serial.print("calibrated distance: ");
+    Serial.print("distance: ");
     Serial.print(dist); 
     
     float this_delta = dist - dist_m;  //error in measured distance
@@ -382,9 +207,6 @@ float computeAverage()
 }
 
 void fwd_v2(double a, double b){
-    Serial.println("in fwd_v2");
-//    Serial.println(a);
-//    Serial.println(b);
     double angle_a = get_angle_a(a, b);
     double angle_b = get_angle_b(a, b);
     double difference = abs(angle_a - angle_b);
@@ -393,10 +215,12 @@ void fwd_v2(double a, double b){
     
     // is user within 1.5 m of wagon?
     if(median_dist < 1.5){
+        Serial.println("brake");
+        brake();
         return;
     }else if (median_dist >= 1.5){
         // case 1: a and b within .2 radians (about 11.5 degrees)
-        if(difference < .2){
+        if(difference < .3){
             // go straight
             straight(a, b, scaled_dc);
             Serial.println("straight");
