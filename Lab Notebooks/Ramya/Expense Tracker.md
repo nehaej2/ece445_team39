@@ -1,0 +1,139 @@
+# Sheet1
+
+ |  |  | 
+Power System | Part Type/Number | Quantity | 
+ | AA batteries | 4 | 
+ | AA battery holder | 1 | 
+ | Screw terminal block (voltage connection) | 1 | 
+ | AP2112K-3.3 (voltage regulator) | 1 | 
+ | 10 uF capacitor | 1 | 
+ | 1 uF capacitor | 1 | 
+ |  |  | 
+ |  |  | 
+MCU | 10 uF capacitor | 1 | 
+ |  |  | 
+UWB Module | 10 uF capacitor | 1 | 
+ | 0.1 uF capacitor | 1 | 
+ | 1 kOhm resistor | 3 | 
+ | 10 kOhm resistor | 1 | 
+ |  |  | 
+USB to UART | Micro USB connector | 1 | 
+ | CP2102N-A02-GQFN28 (USB to UART chip) | 1 | 
+ | SP0503BAHTG (ESD protection diodes) | 1 | 
+ |  |  | 
+ | 0.1 uF capacitor | 1 | 
+ | 1 uF capacitor | 1 | 
+ | 4.7 uF capacitor | 1 | 
+ |  |  | 
+ | 0 ohm resistor | 2 | 
+ | 1 kOhm resistor | 1 | 
+ | 10 kOhm resistor | 3 | 
+ | 22.1 kOhm resistor | 1 | 
+ | 47.5 kOhm resistor | 1 | 
+ |  |  | 
+ | ASS8050-L-HF NPN BJT | 2 | 
+ |  |  | 
+ |  |  | 
+OVERALL TOTAL FOR BOTH SUBSYSTEMS | AA batteries | 8 | Place to Order:
+Multiplied by 2 for both subsystems | AA battery holder | 2 | ECE Supply Center Catalog
+ | AP2112K-3.3 (voltage regulator) | 2 | ECE Supply Center Catalog
+ | Connector - 2 position terminal block (voltage connection) | 2 | ECE Services Shop Inventory
+ |  |  | ECE Services Shop Inventory
+ | 10 uF capacitor | 6 | 
+ | 1 uF capacitor | 4 | ECE Services Shop Inventory
+ | 0.1 uF capacitor | 4 | ECE Services Shop Inventory
+ | 4.7 uF capacitor | 2 | ECE Services Shop Inventory
+ |  |  | ECE Services Shop Inventory
+ | 0 ohm resistor | 4 | 
+ | 1 kOhm resistor | 8 | ECE Services Shop Inventory
+ | 10 kOhm resistor | 8 | ECE Services Shop Inventory
+ | 22.1 kOhm resistor | 2 | ECE Services Shop Inventory
+ | 47.5 kOhm resistor | 2 | https://www.mouser.com/ProductDetail/ROHM-Semiconductor/SFR01MZPF2212?qs=byeeYqUIh0M6qalISBQEmA%3D%3D
+ |  |  | https://www.mouser.com/ProductDetail/KOA-Speer/RK73H2BTTDD4752F?qs=p%252BRu1ak6OBv4MYYHzKheaw%3D%3D
+ | ASS8050-L-HF NPN BJT | 4 | 
+ |  |  | https://www.mouser.com/ProductDetail/Comchip-Technology/ASS8050-L-HF?qs=hd1VzrDQEGiiYR01OS8DDQ%3D%3D
+ | Micro USB connector | 2 | 
+ | CP2102N-A02-GQFN28 (USB to UART chip) | 2 | ECE Services Shop Inventory
+ | SP0503BAHTG (ESD protection diodes) | 2 | https://www.mouser.com/ProductDetail/Silicon-Labs/CP2102N-A02-GQFN28?qs=u16ybLDytRaSBkSkyjYFiA%3D%3D&srsltid=AfmBOoqF9l_sQ5_koTbcJd7Qj-eamDukimP3QgeEmYIuVz_vJL7pp_GN
+ |  |  | https://www.digikey.com/en/products/detail/littelfuse-inc/SP0503BAHTG/1154308
+ |  |  | 
+Motor Subsystem | (Did not include 12V battery/pin header for battery) |  | 
+ |  |  | 
+Power System | Part Type/Number | Quantity | 
+3.3V Regulator | AP2112K-3.3 (voltage regulator) | 1 | 
+ | 1 uF capacitor | 2 | 
+ |  |  | 
+12v->5v Buck Converter | LM2596SX-5.0/NOPB | 1 | 
+ | 680 uF capacitor | 1 | 
+ | 330 uF capacitor | 1 | 
+ | Diode 40 V 5A Surface Mount DO-214AC (SMA) | 1 | 
+ | 33 uH Inductor | 1 | 
+ | Connector - 2 position terminal block (voltage connection) | 1 | 
+ | 12V battery | 1 | 
+ |  |  | 
+MCU | 10 uF capacitor | 1 | 
+ |  |  | 
+UWB Module | 10 uF capacitor | 1 | 
+ | 0.1 uF capacitor | 1 | 
+ | 1 kOhm resistor | 3 | 
+ | 10 kOhm resistor | 1 | 
+ |  |  | 
+Motor Driver | 0.1 uF capacitor | 2 | 
+ | 10 uF capacitor | 2 | 
+ | 2 pin female connector | 2 | 
+ |  |  | 
+ |  |  | 
+USB to UART | Micro USB connector | 1 | 
+ | CP2102N-A02-GQFN28 (USB to UART chip) | 1 | 
+ | SP0503BAHTG (ESD protection diodes) | 1 | 
+ |  |  | 
+ | 0.1 uF capacitor | 1 | 
+ | 1 uF capacitor | 1 | 
+ | 4.7 uF capacitor | 1 | 
+ |  |  | 
+ | 0 ohm resistor | 2 | 
+ | 1 kOhm resistor | 1 | 
+ | 10 kOhm resistor | 3 | 
+ | 22.1 kOhm resistor | 1 | 
+ | 47.5 kOhm resistor | 1 | 
+ |  |  | 
+ | ASS8050-L-HF NPN BJT | 2 | 
+ |  |  | 
+ |  |  | 
+ |  |  | 
+ |  |  | 
+OVERALL TOTAL FOR SUBSYSTEM (Motor) |  |  | Place to Order:
+ | 2 pin male | 2 | https://www.mouser.com/ProductDetail/Amphenol-FCI/68000-402HLF?qs=Jhn0v8ulSDtl9VR1zMrdxQ%3D%3D
+ | 2 pin female connector | 2 | https://www.mouser.com/ProductDetail/Harwin/D01-9970242?qs=sGAEpiMZZMvlX3nhDDO4AHEf9VobuOBfXLrMJaxsDWE%3D
+ | Connector - 2 position terminal block (voltage connection) | 1 | ECE Services Shop Inventory
+ | 12V battery | 1 | 
+ | AP2112K-3.3 (voltage regulator) | 1 | ECE Services Shop Inventory
+ | LM2596SX-5.0/NOPB | 1 | https://www.mouser.com/ProductDetail/Texas-Instruments/LM2596SX-5.0-NOPB?qs=X1J7HmVL2ZGZ5T4VcWdmNw%3D%3D
+ |  |  | 
+ | CDBA540-HF (40V 5A Diode) | 1 | ECE Services Shop Inventory
+ |  |  | 
+ | 33 uH Inductor | 1 | https://www.mouser.com/ProductDetail/Bourns/SRP1050WA-330M?qs=sGAEpiMZZMv126LJFLh8y%2FJ75n8E1mNFSvx57%2F0Si90%3D
+ |  |  | 
+ | 10 uF capacitor | 4 | ECE Services Shop Inventory
+ | 0.1 uF capacitor | 4 | ECE Services Shop Inventory
+ | 1 uF capacitor | 3 | ECE Services Shop Inventory
+ | 4.7 uF capacitor | 1 | ECE Services Shop Inventory
+ | 680 uF capacitor | 1 | https://www.mouser.com/ProductDetail/Panasonic/EEE-FT1V681UP?qs=sGAEpiMZZMsh%252B1woXyUXj0zX0xhdS6Q2MgmHRfJXY2Y%3D
+ | 330 uF capacitor | 1 | https://www.mouser.com/ProductDetail/Bourns/SRP1050WA-330M?qs=sGAEpiMZZMv126LJFLh8y%2FJ75n8E1mNFSvx57%2F0Si90%3D
+ |  |  | 
+ | 0 ohm resistor | 2 | ECE Services Shop Inventory
+ | 1 kOhm resistor | 4 | ECE Services Shop Inventory
+ | 10 kOhm resistor | 4 | ECE Services Shop Inventory
+ | 22.1 kOhm resistor | 1 | https://www.mouser.com/ProductDetail/ROHM-Semiconductor/SFR01MZPF2212?qs=byeeYqUIh0M6qalISBQEmA%3D%3D
+ | 47.5 kOhm resistor | 1 | https://www.mouser.com/ProductDetail/KOA-Speer/RK73H2BTTDD4752F?qs=p%252BRu1ak6OBv4MYYHzKheaw%3D%3D
+ |  |  | 
+ |  |  | 
+ | Micro USB connector | 1 | ECE Services Shop Inventory
+ | CP2102N-A02-GQFN28 (USB to UART chip) | 1 | https://www.mouser.com/ProductDetail/Silicon-Labs/CP2102N-A02-GQFN28?qs=u16ybLDytRaSBkSkyjYFiA%3D%3D&srsltid=AfmBOoqF9l_sQ5_koTbcJd7Qj-eamDukimP3QgeEmYIuVz_vJL7pp_GN
+ | SP0503BAHTG (ESD protection diodes) | 1 | https://www.digikey.com/en/products/detail/littelfuse-inc/SP0503BAHTG/1154308
+ |  |  | 
+ | ASS8050-L-HF NPN BJT | 2 | https://www.mouser.com/datasheet/2/80/AQW_JTR13_ASS8050_L_HF_Thru__ASS8050_H_HF_RevA-1923834.pdf
+ |  |  | 
+ | Motor Driver | 1 | https://www.mouser.com/ProductDetail/Toshiba/TB6612FNGC8EL?qs=rsevcuukUAy2UalRuv4E%2FQ%3D%3D&srsltid=AfmBOoruNTwH4VAWHJuayUmcB6KJk2Blda7hNyug9RNi2bzNpmZdge3B
+
+---
