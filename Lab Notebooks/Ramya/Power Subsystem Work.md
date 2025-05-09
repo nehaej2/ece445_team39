@@ -64,7 +64,7 @@ Initially, when designing the motor power system, we debated utilizing a standar
 This voltage regulator is used in all three power systems in our design. On the motor subsystem, it will convert the 5 V output from the buck converter to 3.3 V. On the user and wagon subsystems, it will convert the 6 V power source to 3.3 V. We decided to utilize a voltage regulator in both cases since the voltage drops are only 1.7 V and 2.7 V, and will not result in high levels of heat dissipation. This chosen voltage regulator is able to provide an output current of 600 mA, which will be sufficient for the max current draw of both the ESP32 and the DWM1000 modules. The schematic for the voltage regulator implementation from Diodes Incorporated can be seen below.
 
 ![Typical Application Circuit for AP2112K-3.3](Images/AP2112%20Schematic.png)
-
+S
 ---
 
 ### High level requirements table/verifications:
