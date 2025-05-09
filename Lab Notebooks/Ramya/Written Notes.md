@@ -1,6 +1,6 @@
 # Written Notes
 
-![Page_1.png](Images/Written Notes/Page_1.png)
+![Page_1.png](Images/Written%20Notes/Page_1.png)
 
 ![Page_2.png](Images/Written Notes/Page_2.png)
 
