@@ -20,6 +20,3 @@
 
 ![Page_10.png](Images/Written%20Notes/Page_10.png)
 
-![Page_11.png](Images/Written%20Notes/Page_11.png)
-
-![Page_12.png](Images/Written%20Notes/Page_12.png)
