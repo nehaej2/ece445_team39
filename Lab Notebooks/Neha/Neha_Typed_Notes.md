@@ -1,4 +1,4 @@
-1/28/25 
+#1/28/25 
 1.  Research existing solutions that are similar/the same  
 a.  If they exist, how can we create something thats different  
 i.  Price/functionality/different sensors  
@@ -12,7 +12,7 @@ a.  Sprinkler system flaws: water supply dependency, could be unavailable during
 outages/water shortages… 
  
  
-2/3/25 
+#2/3/25 
 BLE tracking:  
 -  Utilize BLE beacon and and BLE receivers to approximate distance between beacon/receiver.  
 -  BLE uses RSSI for outdoor positioning. The smartphone estimates the distance to the beacon by 
@@ -30,21 +30,36 @@ Ultrasonic tracking:
 -  User carries an ultrasonic emitter that periodically sends sound pulses and wagon carries 
 ultrasonic receivers that detect the pulses and calculate the distance using Time of Flight (ToF) 
  
-  BLE tracking   Active RFID tracking  
-Pros  ●  Low power consumption   ●  Real time tracking  
-●  Cost effective   ●  Better accuracy than BLE RSSI alone  
-●  Simplicity  
-Cons   ●  Signal interference (BLE signals  ●  Environmental factors can cause 
-can be interfered by any object  interference problems w tags mounted 
-that obscures the line of sight)  on metal or on containers w liquid. But 
-●  More examples of indoor  improvements in tags and antenna 
-tracking and may not be accurate  design have allowed these problems to 
-if the setup depends on  be overcome 
-environmental factors  ●  May need multiple readers for accuracy 
-●  Signal strength drops quickly for  purposes  
-the first 1-2 meters away 
-●  Slow response time.  
-  Ultrasonic tracking    
+BLE tracking   
+Pros  
+●  Low power consumption  
+●  Cost effective  
+●  Simplicity 
+Cons
+●  Signal interference (BLE signals 
+   can be interfered by any object
+   that obscures the line of sight)
+●  More examples of indoor
+   tracking and may not be accurate
+   if the setup depends on
+environmental factors
+●  Signal strength drops quickly for
+   the first 1-2 meters away
+●  Slow response time. 
+
+Active RFID tracking  
+●  Real time tracking  
+●  Better accuracy than BLE RSSI alone  
+●  Environmental factors can cause 
+  interference problems w tags mounted 
+  on metal or on containers w liquid. But 
+  improvements in tags and antenna 
+  design have allowed these problems to 
+  be overcome 
+●  May need multiple readers for accuracy 
+  purposes  
+ 
+Ultrasonic tracking    
 Pros  ●  Directional detection    
 ●  Accurate for shorter distances  
 Cons  ●  Limited range <10m   
@@ -52,7 +67,7 @@ Cons  ●  Limited range <10m
 ●  Delays due to the fact that 
 ultrasonic waves travel slower 
 than RF signals  
-●   
+
  
  
 Response to TA questions: 
@@ -69,7 +84,7 @@ In the time it takes for the robot to detect and move around a potential obstacl
 the range of the ultrasonic sensor. The GPS module ensures that even if the human exceeds the ultrasonic 
 range, the robot can still move toward the user until it is again in range of the ultrasonic sensor.  
  
-2/10/25 - project proposal  
+#2/10/25 - project proposal  
 Solution: 
 Our proposed solution is an autonomous, self-following wagon designed to carry loads for users in both 
 indoor and outdoor environments. The wagon will employ an Ultra-Wideband (UWB) tracking system to 
@@ -106,7 +121,7 @@ precise navigation.
 Wagon Control Subsystem requirements: 
 ●  2.8 to 3.6V 
  
-2/20/25 
+#2/20/25 
 Questions to Answer: 
  
 1.  How do we configure the anchors to communicate with a specific tag? How are the anchors 
@@ -139,7 +154,7 @@ Notes:
 -  Page 208 of the user manual talks about antenna calibration – we need to do this to get the t_delay 
 value required for TOF calculation 
  
-2/25/25  
+#2/25/25  
 MOTORS:  GB37Y3530-131EN  DC12V 83 RPM  
 Motor Datasheet: https://wiki.dfrobot.com/12V_DC_Motor_251rpm_w_Encoder__SKU__FIT0186_  
 Stall Current: 7A 
@@ -178,7 +193,7 @@ Full-bridge
 -  Can drive all 4 FETs 
  
  
-2/27/25 
+#2/27/25 
 Components needed:  
 -  Full Bridge Motor Dual Driver L298N x1  
 -  Datasheet: 
@@ -221,7 +236,7 @@ Design doc 2: http://courses.grainger.illinois.edu/ece445/getfile.asp?id=24040
 And used with an ESP32 WROOM  
  
  
-3/13/25 
+#3/13/25 
 What we need: 
 -  DW1000 transceivers x3 
 -  https://www.mouser.com/ProductDetail/Qorvo/DWM1000?qs=TiOZkKH1s2R6b5D6df6
@@ -274,7 +289,7 @@ https://mp1993.de/esp-32-programmer-with-cp2102/
 CP2102N datasheet around 6 dollars (QFN28) 
 https://www.silabs.com/documents/public/data-sheets/cp2102n-datasheet.pdf  
  
-4/21/25 
+#4/21/25 
 4/21  
  
  Integrate bluetooth communication from tag to motor subsystem  
