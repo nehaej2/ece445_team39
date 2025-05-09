@@ -53,7 +53,7 @@ Since this wagon is a prototype model, a runtime between 45-60 minutes should su
 **4x AA Batteries:**  
 According to the Duracell datasheet, their Optimum AA batteries have a voltage of 1.5 V and a total service hours time of approximately 3 hours when current is being drawn at a constant rate of 500 mA. This can be seen from the image taken from the data sheet below. Since both the Wagon and User systems require approximately 3.3 volts and 0.515 A of current, the AA batteries will provide more than sufficient power for our goal runtime between 45-60 minutes.
 
-![Voltage vs. Service Hours for Duracell Optimum AA Battery Given Constant Current](images/Duracell%20Optimum%20Hours%20vs.%20Voltage.png)
+![Voltage vs. Service Hours for Duracell Optimum AA Battery Given Constant Current](Images/Duracell%20Optimum%20Hours%20vs.%20Voltage.png)
 
 **LM2596-5.0 Buck Converter:**  
 Initially, when designing the motor power system, we debated utilizing a standard 5 V voltage regulator capable of handling a 12 V input. After further research, we determined that the heat dissipation from a 7 V voltage drop utilizing a standard voltage regulator would be too much for our system to handle, especially given that we are using sensitive components such as the DWM1000. To properly handle this high voltage drop, we decided to utilize a step-down buck converter, which generates minimal heat. This specific part we have chosen allows for an output current of 1.4A, which will be enough to support the motor driver logic, max current draw from the ESP32, and the max current draw from the UWB transceiver. The schematic for the buck converter implementation from Texas Instruments documentation can be seen below.
