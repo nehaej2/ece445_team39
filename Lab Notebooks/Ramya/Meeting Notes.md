@@ -2,32 +2,24 @@
  
 Assigned Tasks: 
  
- Fill out ‘Schedule’ page on 445 website (to schedule TA meetings) 
- Ian 
- Neha 
- Ramya 
- Finalize parts to order – keep track of this on the Expense spreadsheet. Note down what 
+Fill out ‘Schedule’ page on 445 website (to schedule TA meetings) 
+- 
+Finalize parts to order – keep track of this on the Expense spreadsheet. Note down what 
 needs to be ordered externally vs through the ECEB shops 
- Ian 
- Neha 
- Ramya 
- Look into proper documentation for the components in each of our subsystems. Keep 
+- 
+Look into proper documentation for the components in each of our subsystems. Keep 
 track of these resources in the shared folder.  
 - 
-Component schematics/pin assignments 
+->Component schematics/pin assignments 
 - 
-Voltage requirements 
+->Voltage requirements 
 - 
-Required communication protocols 
- Ian 
- Neha 
- Ramya 
- Check if KiCad has components – if not look into importing schematics/creating custom 
+->Required communication protocols 
+
+Check if KiCad has components – if not look into importing schematics/creating custom 
 ones. 
- Ian 
- Neha 
- Ramya 
- Look into how to attach components to the PCB from a distance – motor system, UWB 
+
+Look into how to attach components to the PCB from a distance – motor system, UWB 
 transceivers.
 
 ---
@@ -41,14 +33,12 @@ Look into difference between TB6612FNG motor driver and L298N motor driver
 - 
 We used the TB6612FNG motor driver module (breakout board) for our 
 breadboard demo – has a simpler design. 
- 
-- 
+
 Understand why the current motor driver module is drawing very low levels of current – 
 slow motor speed (EVERYONE – meeting 3/25) 
  
-- 
 Change the 5 V voltage regulator to diff model (RAMYA) 
-- 
+
 Copy the USB to UART schematic from the motor subsystem (NEHA) 
  
 Requirements: 
