@@ -53,18 +53,18 @@ Since this wagon is a prototype model, a runtime between 45-60 minutes should su
 **4x AA Batteries:**  
 According to the Duracell datasheet, their Optimum AA batteries have a voltage of 1.5 V and a total service hours time of approximately 3 hours when current is being drawn at a constant rate of 500 mA. This can be seen from the image taken from the data sheet below. Since both the Wagon and User systems require approximately 3.3 volts and 0.515 A of current, the AA batteries will provide more than sufficient power for our goal runtime between 45-60 minutes.
 
-![Voltage vs. Service Hours for Duracell Optimum AA Battery Given Constant Current]("images/Duracell Optimum Hours vs. Voltage.png")
+![Voltage vs. Service Hours for Duracell Optimum AA Battery Given Constant Current](images/Duracell%20Optimum%20Hours%20vs.%20Voltage.png)
 
 **LM2596-5.0 Buck Converter:**  
 Initially, when designing the motor power system, we debated utilizing a standard 5 V voltage regulator capable of handling a 12 V input. After further research, we determined that the heat dissipation from a 7 V voltage drop utilizing a standard voltage regulator would be too much for our system to handle, especially given that we are using sensitive components such as the DWM1000. To properly handle this high voltage drop, we decided to utilize a step-down buck converter, which generates minimal heat. This specific part we have chosen allows for an output current of 1.4A, which will be enough to support the motor driver logic, max current draw from the ESP32, and the max current draw from the UWB transceiver. The schematic for the buck converter implementation from Texas Instruments documentation can be seen below.
 
-![Typical Application Circuit for LM2596-5.0]("images/LM2596 Buck Converter Schematic.png")
+![Typical Application Circuit for LM2596-5.0](images/LM2596%20Buck%20Converter%20Schematic.png)
 
 **AP2112K-3.3 Voltage Regulator:**  
 This voltage regulator is used in all three power systems in our design. On the motor subsystem, it will convert the 5 V output from the buck converter to 3.3 V. On the user and wagon subsystems, it will convert the 6 V power source to 3.3 V. We decided to utilize a voltage regulator in both cases since the voltage drops are only 1.7 V and 2.7 V, and will not result in high levels of heat dissipation. This chosen voltage regulator is able to provide an output current of 600 mA, which will be sufficient for the max current draw of both the ESP32 and the DWM1000 modules. The schematic for the voltage regulator implementation from Diodes Incorporated can be seen below.
 
-![Typical Application Circuit for AP2112K-3.3]("images/AP2112 Schematic.png")
-
+![Typical Application Circuit for AP2112K-3.3](images/AP2112%20Schematic.png)
+S
 ---
 
 ### High level requirements table/verifications:
