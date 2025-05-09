@@ -1,4 +1,4 @@
-2/16 Meeting Notes 
+# 2/16 Meeting Notes 
  
 Assigned Tasks: 
  
@@ -9,22 +9,22 @@ needs to be ordered externally vs through the ECEB shops
 - 
 Look into proper documentation for the components in each of our subsystems. Keep 
 track of these resources in the shared folder.  
-- 
-->Component schematics/pin assignments 
-- 
-->Voltage requirements 
-- 
-->Required communication protocols 
 
+->Component schematics/pin assignments 
+
+->Voltage requirements 
+
+->Required communication protocols 
+- 
 Check if KiCad has components – if not look into importing schematics/creating custom 
 ones. 
-
+- 
 Look into how to attach components to the PCB from a distance – motor system, UWB 
 transceivers.
 
 ---
 
-3/24 Meeting Notes: 
+# 3/24 Meeting Notes: 
  
 Finish Motor Subsystem PCB: 
 - 
